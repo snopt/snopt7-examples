@@ -1,0 +1,44 @@
+#-----------------------------------------------------------------------
+# Submakefile :: c examples
+#-----------------------------------------------------------------------
+
+C_EXE += hs118_c  toyA  toyB  toyC
+C_EXAMPLES = $(C_EXE:%=$(EX_C_OBJDIR)/%)
+
+#-----------------------------------------------------------------------
+
+c: pre_c c_dir $(C_EXAMPLES)
+ifneq ($(EX_C_SRCDIR),$(EX_C_OBJDIR))
+	@-cp -f ${EX_C_SRCDIR}/*.spc ${EX_C_OBJDIR}/ > /dev/null 2>&1
+	@-cp -f ${EX_C_SRCDIR}/*.mps ${EX_C_OBJDIR}/ > /dev/null 2>&1
+endif
+
+pre_c:
+	@echo "Compiling and linking SNOPT C examples..."
+
+c_dir: $(top_builddir)
+	if [ ! -d $(EX_C_OBJDIR) ]; then mkdir $(EX_C_OBJDIR); fi
+
+ifeq ($(cpp_enabled),yes)
+$(EX_C_OBJDIR)/%:  $(EX_C_SRCDIR)/%.c
+	$(COMPILE_C) -c $(CFLAGS) -I$(incdir) $< -o $@.o
+	$(LINK_CXX) $(CXXFLAGS) -o $@ $@.o $(SNOPT_LIB)
+
+$(EX_C_OBJDIR)/%_c:  $(EX_C_SRCDIR)/%.c
+	$(COMPILE_C) -c $(CFLAGS) -I$(incdir) $< -o $@.o
+	$(LINK_CXX) $(CXXFLAGS) -o $@ $@.o $(SNOPT_LIB)
+else
+$(EX_C_OBJDIR)/%:  $(EX_C_SRCDIR)/%.c
+	$(COMPILE_C) -c $(CFLAGS) -I$(incdir) $< -o $@.o
+	$(LINK_C) $(CFLAGS) -o $@ $@.o $(SNOPT_LIB)
+
+$(EX_C_OBJDIR)/%_c:  $(EX_C_SRCDIR)/%.c
+	$(COMPILE_C) -c $(CFLAGS) -I$(incdir) $< -o $@.o
+	$(LINK_C) $(CFLAGS) -o $@ $@.o $(SNOPT_LIB)
+endif
+
+#-----------------------------------------------------------------------
+
+.PRECIOUS: $(EX_C_OBJDIR)/%.lo
+
+.PHONY: c pre_c c_dir

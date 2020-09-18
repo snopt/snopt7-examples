@@ -1,0 +1,6 @@
+#!/bin/sh
+
+  ./toyA
+  ./toyB
+  ./toyC
+  ./hs118_c

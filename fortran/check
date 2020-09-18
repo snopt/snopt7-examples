@@ -1,0 +1,56 @@
+#!/bin/sh
+
+  ./sntoya
+  ./sntoyb
+  ./sntoyc
+  ./snmaina
+  ./snmainb
+  ./snmainc
+  ./npmain
+  ./snfeasa
+  ./snfeasb
+  ./hs47a
+  ./hs47b
+  ./hs47c
+  ./hs47Moda
+  ./hs47Modb
+  ./hs47Modc
+  ./hs47ModInfa
+  ./hs47ModInfb
+  ./hs47ModInfc
+  ./snmemtesta
+  ./snmemtestb
+  ./testera
+  ./t1dieta
+  ./t1dietb
+  ./t2bananaa
+  ./t2bananab
+  ./t3qp
+  ./t4mannea
+  ./t4manneb
+  ./t4mannec
+  ./t5weapon
+  ./t6wood
+  ./t7etamacro
+  ./calvara
+  ./catmixa
+  ./catmixb
+  ./catmixc
+  ./springa
+  ./springb
+  ./springia
+  ./springib
+  ./maxi
+  ./slmain
+  ./sqmain
+  ./sqmain2
+  ./hs76
+  ./hs76Max
+  ./hs76ModInf
+  ./hs76QNModInf
+  ./hs118
+  ./slmainMPS
+  ./sqmainMPS
+  ./runLP adlittle lp.spc
+  ./runLP pilot4   lp.spc
+  ./runLP refinery lp.spc

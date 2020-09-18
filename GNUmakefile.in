@@ -1,0 +1,258 @@
+########################################################################
+# SQOPT/SNOPT Examples GNUmakefile.in
+########################################################################
+
+#-----------------------------------------------------------------------
+# Compilers and linker flags
+#-----------------------------------------------------------------------
+FC           = @FC@
+FCFLAGS      = @FCFLAGS@ @OPENMP_FCFLAGS@
+FCLIBS       = @FCLIBS@
+LIBS         = @LIBS@
+
+CC           = @CC@
+CFLAGS       = @CFLAGS@
+
+CXX          = @CXX@
+CXXFLAGS     = @CXXFLAGS@ --std=c++11
+
+LDFLAGS      = @LDFLAGS@
+LTFLAGS      = --quiet
+
+omp_enabled  = @enable_openmp@
+cpp_enabled  = @with_cpp@
+
+ifeq ($(FC),ifort)
+  FCFLAGS   += -nofor-main
+endif
+
+#-----------------------------------------------------------------------
+
+shared       = @enable_shared@
+static       = @enable_static@
+
+SHELL        = @SHELL@
+LIBTOOL      = @LIBTOOL@
+LIBTOOL_DEPS = @LIBTOOL_DEPS@
+
+prefix       = @prefix@
+exec_prefix  = @exec_prefix@
+datarootdir  = @datarootdir@
+datadir      = @datadir@
+bindir       = @bindir@
+libdir       = @libdir@
+incdir       = @includedir@
+mandir       = @mandir@
+srcdir       = @srcdir@
+
+top_srcdir   = @top_srcdir@
+top_builddir = @top_builddir@
+
+abs_srcdir   = @abs_top_srcdir@
+abs_builddir = @abs_top_builddir@
+
+#-----------------------------------------------------------------------
+
+EX_F_SRCDIR   = $(top_srcdir)/fortran
+EX_C_SRCDIR   = $(top_srcdir)/c
+EX_CPP_SRCDIR = $(top_srcdir)/cpp
+
+EX_F_OBJDIR   = $(top_builddir)/fortran
+EX_C_OBJDIR   = $(top_builddir)/c
+EX_CPP_OBJDIR = $(top_builddir)/cpp
+
+#-----------------------------------------------------------------------
+
+COMPILE_F90  = $(LIBTOOL) --mode=compile --tag=FC  $(LTFLAGS) $(FC)
+COMPILE_F    = $(LIBTOOL) --mode=compile --tag=FC  $(LTFLAGS) $(FC)
+COMPILE_C    = $(LIBTOOL) --mode=compile --tag=CC  $(LTFLAGS) $(CC)
+COMPILE_CXX  = $(LIBTOOL) --mode=compile --tag=CXX $(LTFLAGS) $(CXX)
+
+LINK_F       = $(LIBTOOL) --mode=link    --tag=FC  $(LTFLAGS) $(FC)
+LINK_C       = $(LIBTOOL) --mode=link    --tag=CC  $(LTFLAGS) $(CC)
+LINK_CXX     = $(LIBTOOL) --mode=link    --tag=CXX $(LTFLAGS) $(CXX)
+
+CLEAN        = $(LIBTOOL) --mode=clean     $(LTFLAGS)
+FINISH       = $(LIBTOOL) --mode=finish    $(LTFLAGS)
+
+#-----------------------------------------------------------------------
+
+modules  = fortran c
+ifeq ($(cpp_enabled),yes)
+  modules += cpp
+endif
+modsrc   = $(modules:%=$(srcdir)/%)
+
+#-----------------------------------------------------------------------
+# Libraries
+#-----------------------------------------------------------------------
+
+SNLIB  = @snopt_lib@
+SNINC  = @includedir@
+
+blas         = @blas@
+ifeq ($(blas),yes)
+  blasLIB    = @BLAS_LIBS@
+endif
+
+SNOPT_LIB  = $(SNLIB) $(blasLIB)
+ifneq ($(FC),ifort)
+SNOPT_LIB += $(FCLIBS)
+endif
+
+#-----------------------------------------------------------------------
+
+all: examples
+ifeq ($(cpp_enabled),yes)
+examples: fortran c cpp
+else
+examples: fortran c
+endif
+
+#-----------------------------------------------------------------------
+include $(patsubst %,%/Submakefile,$(modsrc))
+#-----------------------------------------------------------------------
+
+clean: clean_cpp
+	$(CLEAN) rm -f $(EX_F_OBJDIR)/*.lo
+	$(CLEAN) rm -f $(EX_C_OBJDIR)/*.lo
+
+clean_cpp:
+ifeq ($(cpp_enabled),yes)
+	$(CLEAN) rm -f $(EX_CPP_OBJDIR)/*.lo
+endif
+
+veryclean: veryclean_cpp clean
+	$(CLEAN) rm -f $(F_EXAMPLES)
+	$(CLEAN) rm -f $(EX_F_OBJDIR)/*.out
+	$(CLEAN) rm -f $(EX_F_OBJDIR)/*.newbasis
+	$(CLEAN) rm -f $(C_EXAMPLES)
+	$(CLEAN) rm -f $(EX_C_OBJDIR)/*.out
+	$(CLEAN) rm -f $(EX_C_OBJDIR)/*.newbasis
+ifneq ($(EX_F_SRCDIR),$(EX_F_OBJDIR))
+	$(CLEAN) rm -f $(EX_F_OBJDIR)/*.spc
+	$(CLEAN) rm -f $(EX_F_OBJDIR)/*.mps
+endif
+ifneq ($(EX_C_SRCDIR),$(EX_C_OBJDIR))
+	$(CLEAN) rm -f $(EX_C_OBJDIR)/*.spc
+endif
+
+veryclean_cpp:
+ifeq ($(cpp_enabled),yes)
+	$(CLEAN) rm -f $(CPP_EXAMPLES)
+	$(CLEAN) rm -f $(EX_CPP_OBJDIR)/*.out
+	$(CLEAN) rm -f $(EX_CPP_OBJDIR)/*.newbasis
+ifneq ($(EX_CPP_SRCDIR),$(EX_CPP_OBJDIR))
+	$(CLEAN) rm -f $(EX_CPP_OBJDIR)/*.spc
+endif
+endif
+
+
+distclean: veryclean
+	-rm -f config.cache config.log config.status GNUmakefile libtool
+
+libtool: $(LIBTOOL_DEPS)
+	$(SHELL) ./config.status libtool
+
+config.status:  $(top_srcdir)/configure
+	./config.status --recheck
+
+GNUmakefile: $(top_srcdir)/GNUmakefile.in $(top_builddir)/config.status
+	./config.status
+
+#-----------------------------------------------------------------------
+
+$(top_builddir):
+	if [ ! -d $(top_builddir) ]; then mkdir $@; fi
+
+obj_dir: $(top_builddir)
+	if [ ! -d $(OBJDIR) ]; then mkdir $(OBJDIR); fi
+
+#-----------------------------------------------------------------------
+
+.SUFFIXES:
+
+check: examples check_c check_cpp
+	@echo "Checking the installation.  This may take a while..."
+ifneq ($(EX_SRCDIR),$(EX_OBJDIR))
+	@-cp ${EX_SRCDIR}/check ${EX_SRCDIR}/runLP ${EX_OBJDIR}/;
+endif
+	@cd ${EX_OBJDIR}; ./check > check.log;
+#	@cd ${EX_OBJDIR}; rm -f ./check.log; $(foreach ex,$(_EXE),./$(ex) >> ./check.log;)
+ifneq ($(EX_SRCDIR),$(EX_OBJDIR))
+	@-rm ${EX_OBJDIR}/check ${EX_OBJDIR}/runLP;
+endif
+	@grep EXIT ${EX_SRCDIR}/check.log0 > /tmp/EXITs0.txt
+	@grep EXIT ${EX_OBJDIR}/check.log  > /tmp/EXITs.txt
+	@echo " "
+	@echo "Comparing expected EXIT messages  (from examples/check.log0)"
+	@echo "with those from this installation (from examples/check.log )"
+	@echo "The differences are listed in /tmp/EXITdiffs.txt"
+	@echo "      0 /tmp/EXITdiffs.txt    is good news (no differences)"
+	@echo " "
+	@diff  /tmp/EXITs0.txt /tmp/EXITs.txt > /tmp/EXITdiffs.txt
+	@wc -l /tmp/EXITdiffs.txt
+
+check_c: examples
+ifeq ($(c_enabled),yes)
+	@echo ""
+	@echo "Checking the C installation..."
+ifneq ($(EX_SRCDIR),$(EX_OBJDIR))
+	@-cp ${EX_SRCDIR}/check_c ${EX_OBJDIR}/;
+endif
+	@cd ${EX_OBJDIR}; ./check_c > check_c.log;
+ifneq ($(EX_SRCDIR),$(EX_OBJDIR))
+	@-rm ${EX_OBJDIR}/check_c;
+endif
+	@grep EXIT ${EX_SRCDIR}/check_c.log0 > /tmp/EXITs0_c.txt
+	@grep EXIT ${EX_OBJDIR}/check_c.log  > /tmp/EXITs_c.txt
+	@echo "  Comparing expected EXIT messages  (from examples/check_c.log0)"
+	@echo "  with those from this installation (from examples/check_c.log )"
+	@echo "  The differences are listed in /tmp/EXITdiffs_c.txt"
+	@echo "       0 /tmp/EXITdiffs_c.txt    is good news (no differences)"
+	@echo " "
+	@diff  /tmp/EXITs0_c.txt /tmp/EXITs_c.txt > /tmp/EXITdiffs_c.txt
+	@wc -l /tmp/EXITdiffs_c.txt
+endif
+
+check_cpp: examples
+ifeq ($(cpp_enabled),yes)
+	@echo ""
+	@echo "Checking the C++ installation..."
+ifneq ($(EX_SRCDIR),$(EX_OBJDIR))
+	@-cp ${EX_SRCDIR}/check_cpp ${EX_OBJDIR}/;
+endif
+	@cd ${EX_OBJDIR}; ./check_cpp > check_cpp.log;
+ifneq ($(EX_SRCDIR),$(EX_OBJDIR))
+	@-rm ${EX_OBJDIR}/check_cpp;
+endif
+	@grep EXIT ${EX_SRCDIR}/check_cpp.log0 > /tmp/EXITs0_cpp.txt
+	@grep EXIT ${EX_OBJDIR}/check_cpp.log  > /tmp/EXITs_cpp.txt
+	@echo "  Comparing expected EXIT messages  (from examples/check_cpp.log0)"
+	@echo "  with those from this installation (from examples/check_cpp.log )"
+	@echo "  The differences are listed in /tmp/EXITdiffs_cpp.txt"
+	@echo "       0 /tmp/EXITdiffs_cpp.txt    is good news (no differences)"
+	@echo " "
+	@diff  /tmp/EXITs0_cpp.txt /tmp/EXITs_cpp.txt > /tmp/EXITdiffs_cpp.txt
+	@wc -l /tmp/EXITdiffs_cpp.txt
+endif
+
+
+help:
+	@echo " "
+	@echo "Options for makefile"
+	@echo "  all:  compile and link all examples"
+	@echo "  fortran: compile and link the fortran examples"
+	@echo "  c: compile and link the fortran examples"
+	@echo "  cpp: compile and link the fortran examples"
+	@echo " "
+	@echo "  check: check examples are running correctly"
+	@echo " "
+	@echo "  clean: remove all .o files"
+	@echo "  veryclean: remove all .o files and executables"
+	@echo "  distclean: remove all configured files, build objects, and executables"
+	@echo " "
+	@echo "  install: install libraries to specified location"
+	@echo "  uninstall: uninstall libraries"
+
+.PHONY: all examples check clean veryclean distclean help

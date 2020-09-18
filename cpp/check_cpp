@@ -1,0 +1,7 @@
+#!/bin/sh
+
+  ./catmixa_cpp
+  ./hs118_cpp
+  ./sntoya_cpp
+  ./sntoyb_cpp
+  ./sntoyc_cpp

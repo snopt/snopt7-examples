@@ -1,0 +1,62 @@
+#-----------------------------------------------------------------------
+# Submakefile :: fortran examples
+#-----------------------------------------------------------------------
+
+F_EXE =     sntoya        sntoyb       sntoyc        snchka              \
+           snmaina       snmainb      snmainc        slmain       npmain \
+           snfeasa       snfeasb                                         \
+             hs47a         hs47b        hs47c                            \
+          hs47Moda      hs47Modb     hs47Modc                            \
+       hs47ModInfa   hs47ModInfb  hs47ModInfc       meyer3b              \
+        snmemtesta    snmemtestb      catmixa       catmixb      catmixc \
+           t1dieta       t1dietb    t2bananaa     t2bananab         t3qp \
+          t4mannea      t4manneb     t4mannec      t5weapon       t6wood \
+        t7etamacro       calvara      springa       springb              \
+          springia      springib                                         \
+              maxi      lpsolver    slmainMPS        sqmain       sqmain2\
+         sqmainMPS          hs76      hs76Max    hs76ModInf  hs76QNModInf\
+         hs118   \
+          snmaina2      snmainb2     snmainc2                            \
+              hs15   catmixb_hot
+ifneq ($(omp_enabled),no)
+  F_EXE += openmp
+endif
+
+F_EXAMPLES = $(F_EXE:%=$(EX_F_OBJDIR)/%)
+
+#-----------------------------------------------------------------------
+
+fortran: pre_fort fort_dir $(F_EXAMPLES)
+ifneq ($(EX_F_SRCDIR),$(EX_F_OBJDIR))
+	@-cp -f ${EX_F_SRCDIR}/*.spc ${EX_F_OBJDIR}/ > /dev/null 2>&1
+	@-cp -f ${EX_F_SRCDIR}/*.mps ${EX_F_OBJDIR}/ > /dev/null 2>&1
+endif
+
+pre_fort:
+	@echo "Compiling and linking SNOPT Fortran examples..."
+
+fort_dir: $(top_builddir)
+	if [ ! -d $(EX_F_OBJDIR) ]; then mkdir $(EX_F_OBJDIR); fi
+
+ifeq ($(cpp_enabled),yes)
+$(EX_F_OBJDIR)/% : $(EX_F_SRCDIR)/%.f
+	$(COMPILE_F) $(FCFLAGS) -c $< -o $@.o
+	$(LINK_CXX) $(CXXFLAGS) -o $@ $@.o $(SNOPT_LIB)
+
+$(EX_F_OBJDIR)/% : $(EX_F_SRCDIR)/%.f90
+	$(COMPILE_F90) $(FCFLAGS) $(MODFLAGS) -c $< -o $@.o
+	$(LINK_CXX) $(CXXFLAGS) -o $@ $@.o $(SNOPT_LIB)
+else
+$(EX_F_OBJDIR)/% : $(EX_F_SRCDIR)/%.f
+	$(COMPILE_F) $(FCFLAGS) -c $< -o $@.o
+	$(LINK_F) $(FCFLAGS) -o $@ $@.o $(SNOPT_LIB)
+
+$(EX_F_OBJDIR)/% : $(EX_F_SRCDIR)/%.f90
+	$(COMPILE_F90) $(FCFLAGS) $(MODFLAGS) -c $< -o $@.o
+	$(LINK_F90) $(FCFLAGS) -o $@ $@.o $(SNOPT_LIB)
+endif
+#-----------------------------------------------------------------------
+
+.PRECIOUS: $(EX_F_OBJDIR)/%.lo
+
+.PHONY: fortran pre_fort fort_dir

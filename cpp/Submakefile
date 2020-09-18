@@ -1,0 +1,35 @@
+#-----------------------------------------------------------------------
+# Submakefile :: examples
+#-----------------------------------------------------------------------
+
+CPP_EXE += catmixa_cpp catmixa_stop_cpp  catmixa2_cpp  hs118_cpp  \
+        sntoya_cpp  sntoyb_cpp sntoyc_cpp
+CPP_EXAMPLES = $(CPP_EXE:%=$(EX_CPP_OBJDIR)/%)
+
+#-----------------------------------------------------------------------
+
+cpp: pre_cpp cpp_dir $(CPP_EXAMPLES)
+ifneq ($(EX_CPP_SRCDIR),$(EX_CPP_OBJDIR))
+	@-cp -f ${EX_CPP_SRCDIR}/*.spc ${EX_CPP_OBJDIR}/ > /dev/null 2>&1
+	@-cp -f ${EX_CPP_SRCDIR}/*.mps ${EX_CPP_OBJDIR}/ > /dev/null 2>&1
+endif
+
+pre_cpp:
+	@echo "Compiling and linking SNOPT C++ examples..."
+
+cpp_dir: $(top_builddir)
+	if [ ! -d $(EX_CPP_OBJDIR) ]; then mkdir $(EX_CPP_OBJDIR); fi
+
+$(EX_CPP_OBJDIR)/%:  $(EX_CPP_SRCDIR)/%.cpp
+	$(COMPILE_CXX) -c $(CXXFLAGS) -I$(incdir) $< -o $@.o
+	$(LINK_CXX) $(CXXFLAGS) -o $@ $@.o $(SNOPT_LIB)
+
+$(EX_CPP_OBJDIR)/%_cpp:  $(EX_CPP_SRCDIR)/%.cpp
+	$(COMPILE_CXX) -c $(CXXFLAGS) -I$(incdir) $< -o $@.o
+	$(LINK_CXX) $(CXXFLAGS) -o $@ $@.o $(SNOPT_LIB)
+
+#-----------------------------------------------------------------------
+
+.PRECIOUS: $(EX_CPP_OBJDIR)/%.lo
+
+.PHONY: cpp pre_cpp dir_cpp
