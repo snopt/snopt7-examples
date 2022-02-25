@@ -51,7 +51,7 @@ extern "C" {
     int *nnCon0, int *nnCon, int *nnObj0, int *nnObj, int *nS,
     int *itn, int *nMajor, int *nMinor, int *nSwap,
     double *condHz, int *iObj, double *sclObj, double *ObjAdd,
-    double *fObj, double *fMrt, double *PenNrm, double *step,
+    double *fObj, double *fMrt, double PenNrm[], double *step,
     double *prInf, double *duInf, double *vimax, double *virel, int hs[],
     int *ne, int *nlocJ, int locJ[], int indJ[], double Jcol[], int *negCon,
     double Ascale[], double bl[], double bu[],

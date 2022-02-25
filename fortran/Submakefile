@@ -17,7 +17,7 @@ F_EXE =     sntoya        sntoyb       sntoyc        snchka              \
          sqmainMPS          hs76      hs76Max    hs76ModInf  hs76QNModInf\
          hs118   \
           snmaina2      snmainb2     snmainc2                            \
-              hs15   catmixb_hot
+              hs15   catmixb_hot catmixc_stop
 ifneq ($(omp_enabled),no)
   F_EXE += openmp
 endif
